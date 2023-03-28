@@ -11,14 +11,14 @@ class WaterDesalinationEnvironment(gym.Environment):
                             'Power': 9, }
         
         # Setting some limits in the environment
-        self.max_height_brine_water_tank = 8 # Meters, maybe
+        self.max_height_brine_water_tank = 10 # Meters, maybe
         self.min_height_brine_water_tank = 0.5 # Meters, maybe
 
-        self.max_height_permeate_water_tank = 8 # Meters, maybe
+        self.max_height_permeate_water_tank = 10 # Meters, maybe
         self.min_height_permeate_water_tank = 0 # Meters, maybe
     
     def step(self, action):
-        # Here, action is the one-hot encoded energy source
+        # Here, action is the energy source
         state = state_calculation(action)
         reward = reward_calculation(action)
         done = check_done(action)
@@ -30,7 +30,7 @@ class WaterDesalinationEnvironment(gym.Environment):
         self.current_height_permate_water_tank = 0
         self.current_battery_charge = 0
         self.current_energy_source = 0 # 0 = Fossil Fuel, 1 = Photovoltaic Panel, 2 = Battery
-        pass
+        return []
 
     def reward_calculation(self):
         reward = 0
