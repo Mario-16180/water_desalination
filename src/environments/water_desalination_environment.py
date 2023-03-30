@@ -14,7 +14,7 @@ class env():
         #                    'Fossil fuel source - switch': 4, 'Photovoltaic panel source - switch': 5, 'Battery source - switch': 6,
         #                    'Power': 7}
         self.state_space = {'Current height of feed water': 0, 'Current height of permeate water': 1,
-                            'Current battery charge': 2, 'Current energy source': 4, 'Current power': 5}
+                            'Current battery charge': 2, 'Current energy source': 3, 'Current time': 4}
         
         # Setting some limits and real life characteristics of the devices in the environment
         self.max_height_feed_water_tank = 4 # Meters
@@ -36,7 +36,7 @@ class env():
 
     def reset(self):
         self.reset_flag = True
-        state = self.state_calculation()
+        state = self.state_calculation(0)
         return state
 
     def reward_calculation(self):
@@ -60,13 +60,15 @@ class env():
         # action[1] is the power
         # source = action[0] # 0 = Fossil Fuel, 1 = Photovoltaic Panel, 2 = Battery
         # power = action[1] # Continuous value in Watts
+        if self.done == True:
+            raise ValueError("The environment has already been terminated. Please reset the environment before calling step() again.")
         if self.reset_flag == True:
             self.current_height_feed_water_tank = self.max_height_feed_water_tank / 2
             self.current_height_permeate_water_tank = 0 # Meters, maybe
-            self.current_battery_charge = 0 # In percentage
+            self.current_battery_charge = 0.1 # In percentage
             self.current_energy_source = 0 # 0 = Fossil Fuel, 1 = Photovoltaic Panel, 2 = Battery
-
-            self.current_time = 0 # In minutes # Ignored for now, but can be used later as a variable for weather, or it could be switched to irradiation.
+            self.current_time = 0 # In minutes. Can be used as a variable to represent weather, or it could be switched to irradiation.
+            
             self.current_power = 6000 # In Watts # For now, let's ignore this, because it is constant and it is tautological with the energy source.
             self.current_osmotic_pressure = 0 # In psi # Ignored for now, but will be used later.
 
@@ -99,22 +101,27 @@ class env():
             self.current_permeate_water_flow = self.recovery_rate * self.current_pre_permeate_water_flow # Qp
 
             ##### Calculation of heights
+
+            ## Feed water tank
             # Calculation of the new height of the feed water tank
-            self.feed_water_flow_input_height = math.sin(2*math.pi*self.current_time/180) + 1
+            self.feed_water_flow_input_height = 0.0081664 * math.sin(2*math.pi*self.current_time/180) + 0.0081664
             # The input of feed water to its tank is a sine wave with a period of 180 minutes that represents the input water in terms of height.
             
-            self.current_feed_water_flow_output_height = self.current_pre_permeate_water_flow / 1 # In meters
+            self.current_feed_water_flow_output_height = self.current_pre_permeate_water_flow / 8 # In meters. Needs revision.
             # The output of the feed water tank is the input to the water pump, and it represents a decrease in height of the feed water tank. It's just the division between
             # the flow rate of the feed water and the area of the pipe that connects the feed water tank to the water pump. It is divided by 1 (as in 1 m^2 to get meters) just for this 
             # first version of the environment. Ideally, in the future, we should consider the design of the water tanks and the pipes.
 
             self.current_height_feed_water_tank += self.feed_water_flow_input_height - self.current_feed_water_flow_output_height # In meters
-
+            
+            ## Permeate water tank
             # Calculation of the new height of the permeate water tank
-            self.current_permeate_water_flow_input_height = self.current_permeate_water_flow / 4 # In meters
+            self.current_permeate_water_flow_input_height = self.current_permeate_water_flow / 8 # In meters. It is divided by 8, assuming that the surface area of the tank
+            # is 8 m^2. Needs revision, but can work for the first version of the environment.
 
+            self.current_height_permeate_water_tank += self.current_permeate_water_flow_input_height # In meters
 
-        state = [self.current_height_feed_water_tank, self.current_height_permeate_water_tank, self.current_battery_charge, self.current_osmotic_pressure, self.current_energy_source, self.current_time, self.current_power]
+        state = [self.current_height_feed_water_tank, self.current_height_permeate_water_tank, self.current_battery_charge, self.current_energy_source, self.current_time]
         return np.array(state)
     
     def check_done(self):
@@ -123,6 +130,8 @@ class env():
         # 2. The permeate water tank is full
         # 3. It has elapsed 24 hours
         if (self.current_height_feed_water_tank <= self.min_height_feed_water_tank) or (self.current_height_permeate_water_tank >= self.max_height_permeate_water_tank) or (self.current_time >= 1440):
+            self.done = True
             return True
         else:
+            self.done = False
             return False
