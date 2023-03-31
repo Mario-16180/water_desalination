@@ -36,6 +36,7 @@ class env():
 
     def reset(self):
         self.reset_flag = True
+        self.done = False
         state = self.state_calculation(0)
         return state
 
@@ -96,7 +97,7 @@ class env():
             
             ##### Calculation of water flows
             # Equation from the paper "Sizing methodology based on design..."
-            self.current_pre_permeate_water_flow = 0.01224 * self.current_power ** (0.5341) * self.cubic_meters_per_day_capacity ** (0.5525) / 60 # Cubic meters per minute
+            self.current_pre_permeate_water_flow = 0.01224 * (self.current_power ** (0.5341)) * (self.cubic_meters_per_day_capacity ** (0.5525)) / 60 # Cubic meters per minute
             # Calculation of Qp with constant recovery rate
             self.current_permeate_water_flow = self.recovery_rate * self.current_pre_permeate_water_flow # Qp
 
@@ -131,7 +132,7 @@ class env():
         # 3. It has elapsed 24 hours
         if (self.current_height_feed_water_tank <= self.min_height_feed_water_tank) or (self.current_height_permeate_water_tank >= self.max_height_permeate_water_tank) or (self.current_time >= 1440):
             self.done = True
-            return True
+            return self.done
         else:
             self.done = False
-            return False
+            return self.done
