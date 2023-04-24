@@ -1,5 +1,5 @@
 import sys
-import gym
+import gymnasium as gym
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -7,23 +7,24 @@ from ddpg import DDPGagent
 from utils import *
 from water_desalination_environment import env 
 
-env = NormalizedEnv(env)
+environment = env()
 
-agent = DDPGagent(env)
-noise = OUNoise(env.action_space)
+agent = DDPGagent(environment)
+#noise = OUNoise(environment.action_space_discrete)
 batch_size = 128
 rewards = []
 avg_rewards = []
 
 for episode in range(50):
-    state = env.reset()
-    noise.reset()
+    state = environment.reset()
+    #noise.reset()
     episode_reward = 0
     
     for step in range(500):
         action = agent.get_action(state)
-        action = noise.get_action(action, step)
-        new_state, reward, done, _ = env.step(action) 
+        print(action)
+        #action = noise.get_action(action, step)
+        new_state, reward, done, _ = environment.step(action) 
         agent.memory.push(state, action, reward, new_state, done)
         
         if len(agent.memory) > batch_size:

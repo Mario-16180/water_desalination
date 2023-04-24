@@ -1,5 +1,5 @@
 import numpy as np
-import gym
+import gymnasium as gym
 from collections import deque
 import random
 
