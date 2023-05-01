@@ -6,7 +6,7 @@ class env():
     Fossil_Fuel = 0
     Photovoltaic_Panel = 1
     Battery = 2
-    def __init__(self):
+    def __init__(self, r1 = -1, r2 = 1, r3 = -0.005, r4 = 0):
         self.action_space_discrete = {'Fossil Fuel': 0, 'Photovoltaic Panel': 1, 'Battery': 2} # Selecting the energy source
         self.action_space_continuous = {'Power': 0} # In Watts
         # self.state_space = {'Current height of feed water': 0, 'Current height of permeate water': 1,
@@ -27,6 +27,12 @@ class env():
         self.cubic_meters_per_day_capacity = 9.1 # Cubic meters per day
         self.list_of_power_values = [30000, 25000, 27500]
 
+        # To experiment with changes in value of the rewards
+        self.reward_if_incomplete = r1
+        self.reward_if_finished_on_time = r2
+        self.dense_reward_if_fossil_fuel = r3
+        self.dense_reward_if_photovoltaic_panel = r4
+
     def step(self, action):
         state = self.state_calculation(action)
         reward = self.reward_calculation()
@@ -46,9 +52,9 @@ class env():
         # episode gets terminated. Moreover, the agent gets a small penalty for every time step that it takes to fill the permeate water tank.
         # Rewards based on terminating conditions and time steps.
         if self.current_time > 1440:
-            reward = -1
+            reward = self.reward_if_incomplete
         elif self.current_height_permeate_water_tank >= self.max_height_permeate_water_tank:
-            reward = 1
+            reward = self.reward_if_finished_on_time
         elif self.current_height_feed_water_tank <= self.min_height_feed_water_tank:
             reward = 0
         else:
@@ -56,7 +62,9 @@ class env():
 
         # Rewards based on the energy source
         if self.current_energy_source == 0:
-            reward += -0.005
+            reward += self.dense_reward_if_fossil_fuel
+        elif self.current_energy_source == 1:
+            reward += self.dense_reward_if_photovoltaic_panel
         return reward
 
     def state_calculation(self, action):
