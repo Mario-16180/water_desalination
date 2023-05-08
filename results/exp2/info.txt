@@ -1,0 +1,7 @@
+
+500 epochs 
+without changing the architecture 
+adding +0.05 reward for choosing solar panel
+changed the reward to 3
+
+No significant change 

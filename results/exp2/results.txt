@@ -1,0 +1,2 @@
+# Fossil Fuel	Battery	Solar Panel	Reward History
+301.00000 	433.00000 	400.00000 	1134.00000
